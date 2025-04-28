@@ -1,5 +1,7 @@
 package com.example.photosapp.model;
 
+import android.content.Context;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileInputStream;
@@ -52,14 +54,10 @@ public class UserManager {
         return false;
     }
 
-    public void saveUsers() {
+    public void saveUsers(Context context) {
         try {
-            File dir = new File(storeDir);
-            if (!dir.exists()) {
-                dir.mkdir();
-            }
-            ObjectOutputStream oos = new ObjectOutputStream(
-                    new FileOutputStream(storeDir + File.separator + storeFile));
+            File file = new File(context.getFilesDir(), storeFile);
+            ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file));
             oos.writeObject(new ArrayList<>(users));
             oos.close();
         } catch (IOException e) {
@@ -68,9 +66,13 @@ public class UserManager {
     }
 
     @SuppressWarnings("unchecked")
-    public void loadUsers() {
+    public void loadUsers(Context context) {
         try {
-            ObjectInputStream ois = new ObjectInputStream(new FileInputStream(storeDir + File.separator + storeFile));
+            File file = new File(context.getFilesDir(), storeFile);
+            if (!file.exists()) {
+                return; // No users yet
+            }
+            ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file));
             ArrayList<User> loadedUsers = (ArrayList<User>) ois.readObject();
             users.clear();
             users.addAll(loadedUsers);
