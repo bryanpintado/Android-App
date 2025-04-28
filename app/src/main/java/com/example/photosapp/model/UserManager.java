@@ -7,16 +7,14 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import photos22.util.AlertUtil;
+
 
 public class UserManager {
     private static final String storeDir = "data";
     private static final String storeFile = "users.dat";
 
     private static UserManager instance;
-    private final ObservableList<User> users = FXCollections.observableArrayList();
+    private final ArrayList<User> users = new ArrayList<>();
 
     private UserManager() {
     }
@@ -28,13 +26,13 @@ public class UserManager {
         return instance;
     }
 
-    public ObservableList<User> getUsers() {
+    public ArrayList<User> getUsers() {
         return users;
     }
 
     public void deleteUser(String username) {
         if (!isUserInList(username)) {
-            AlertUtil.showAlert("Error: username (" + username + ") is not in the list");
+            System.out.println("Error: username (" + username + ") is not in the list");
             return;
         }
         for (User user : users) {
@@ -65,7 +63,7 @@ public class UserManager {
             oos.writeObject(new ArrayList<>(users));
             oos.close();
         } catch (IOException e) {
-            AlertUtil.showAlert("Error saving users: " + e.toString());
+            System.out.println("Error saving users: " + e.toString());
         }
     }
 
@@ -74,10 +72,11 @@ public class UserManager {
         try {
             ObjectInputStream ois = new ObjectInputStream(new FileInputStream(storeDir + File.separator + storeFile));
             ArrayList<User> loadedUsers = (ArrayList<User>) ois.readObject();
-            users.setAll(loadedUsers);
+            users.clear();
+            users.addAll(loadedUsers);
             ois.close();
         } catch (IOException | ClassNotFoundException e) {
-            AlertUtil.showAlert("Error: " + e.toString());
+            System.out.println("Error loading users: " + e.toString());
         }
     }
 
@@ -92,7 +91,7 @@ public class UserManager {
 
     public boolean addUser(User user) {
         if (isUserInList(user.getUsername())) {
-            AlertUtil.showAlert("Error: Username already exists!!");
+            System.out.println("Error: Username already exists!!");
             return false;
         }
         users.add(user);
