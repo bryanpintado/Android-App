@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Photos App</string>
+    <string name="photo_description">Displayed photo</string>
+    <string name="photo_thumbnail_desc">Photo thumbnail</string>
 </resources>

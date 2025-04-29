@@ -12,13 +12,13 @@ public class Photo implements Serializable {
     private String fileUri; // Store the URI as a String
     private String caption;
     private ArrayList<Tag> tags;
-    private LocalDateTime dateTime;
+//    private LocalDateTime dateTime;
 
     public Photo(Uri uri) {
         this.fileUri = uri.toString();
         this.caption = "";
         this.tags = new ArrayList<>();
-        this.dateTime = LocalDateTime.now();
+//        this.dateTime = LocalDateTime.now();
     }
 
     public String getFileUri() {
@@ -37,7 +37,7 @@ public class Photo implements Serializable {
         return tags;
     }
 
-    public LocalDateTime getDateTime() {
-        return dateTime;
-    }
+//    public LocalDateTime getDateTime() {
+//        return dateTime;
+//    }
 }

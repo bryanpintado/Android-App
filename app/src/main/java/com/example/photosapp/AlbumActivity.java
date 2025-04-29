@@ -7,7 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
 import android.view.View;
-import android.widget.ArrayAdapter;
+import com.example.photosapp.PhotoAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -31,8 +31,8 @@ public class AlbumActivity extends AppCompatActivity {
 
     private ListView photoListView;
     private Button addPhotoButton;
-    private ArrayAdapter<String> photoAdapter;
-    private ArrayList<String> photoNames;
+    private PhotoAdapter photoAdapter;
+    private ArrayList<Photo> photoList;
 
     private Album currentAlbum;
     private String albumName;
@@ -52,12 +52,14 @@ public class AlbumActivity extends AppCompatActivity {
         photoListView = findViewById(R.id.photoListView);
         addPhotoButton = findViewById(R.id.addPhotoButton);
 
-        photoNames = new ArrayList<>();
+        photoList = new ArrayList<>();
 
-        loadAlbum();
-
-        photoAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, photoNames);
+        // Initialize adapter before loading data
+        photoAdapter = new PhotoAdapter(this, R.layout.list_item_photo, photoList);
         photoListView.setAdapter(photoAdapter);
+
+        // Now load the album (safe to notify the adapter)
+        loadAlbum();
 
         addPhotoButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -68,26 +70,16 @@ public class AlbumActivity extends AppCompatActivity {
     }
 
     private void loadAlbum() {
+        photoList.clear();
         User owner = UserManager.getInstance().getUserByUsername("owner");
         if (owner != null) {
-            currentAlbum = owner.getAlbumByName(albumName);
-            if (currentAlbum != null) {
-                for (Photo photo : currentAlbum.getPhotos()) {
-                    String fileUri = photo.getFileUri();
-                    String displayName = "Unknown Photo";
-                    if (fileUri != null && !fileUri.isEmpty()) {
-                        Uri uri = Uri.parse(fileUri);
-                        try {
-                            displayName = getDisplayNameFromUri(uri);
-                        } catch (SecurityException e) {
-                            String segment = uri.getLastPathSegment();
-                            displayName = (segment != null) ? segment : "Unknown Photo";
-                        }
-                    }
-                    photoNames.add(displayName);
-                }
+            Album album = owner.getAlbumByName(albumName);
+            currentAlbum = album;
+            if (album != null) {
+                photoList.addAll(album.getPhotos());
             }
         }
+        photoAdapter.notifyDataSetChanged();
     }
 
     private void selectPhoto() {
@@ -115,8 +107,7 @@ public class AlbumActivity extends AppCompatActivity {
                 currentAlbum.addPhoto(newPhoto);
                 UserManager.getInstance().saveUsers(this);
 
-                String displayName = getDisplayNameFromUri(selectedImageUri);
-                photoNames.add(displayName);
+                photoList.add(newPhoto);
                 photoAdapter.notifyDataSetChanged();
             } else {
                 Toast.makeText(this, "Error selecting photo", Toast.LENGTH_SHORT).show();
