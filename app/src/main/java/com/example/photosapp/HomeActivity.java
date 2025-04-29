@@ -7,6 +7,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import android.content.Intent;
 
 import com.example.photosapp.model.Album;
 import com.example.photosapp.model.User;
@@ -45,11 +46,12 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
 
-        // Click on album to open (later)
         albumListView.setOnItemClickListener((parent, view, position, id) -> {
             String selectedAlbum = albumNames.get(position);
-            Toast.makeText(HomeActivity.this, "Clicked Album: " + selectedAlbum, Toast.LENGTH_SHORT).show();
-            // TODO: Navigate to Album screen later
+
+            Intent intent = new Intent(HomeActivity.this, AlbumActivity.class);
+            intent.putExtra("album_name", selectedAlbum);
+            startActivity(intent);
         });
     }
 

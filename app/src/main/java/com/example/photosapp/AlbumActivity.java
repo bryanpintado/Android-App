@@ -1,0 +1,166 @@
+package com.example.photosapp;
+
+import android.content.ContentResolver;
+import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Bundle;
+import android.provider.OpenableColumns;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ListView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.photosapp.model.Album;
+import com.example.photosapp.model.Photo;
+import com.example.photosapp.model.User;
+import com.example.photosapp.model.UserManager;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+
+public class AlbumActivity extends AppCompatActivity {
+
+    private static final int REQUEST_CODE_PICK_IMAGE = 1;
+
+    private ListView photoListView;
+    private Button addPhotoButton;
+    private ArrayAdapter<String> photoAdapter;
+    private ArrayList<String> photoNames;
+
+    private Album currentAlbum;
+    private String albumName;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_album);
+
+        albumName = getIntent().getStringExtra("album_name");
+        if (albumName == null) {
+            Toast.makeText(this, "No album specified", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        photoListView = findViewById(R.id.photoListView);
+        addPhotoButton = findViewById(R.id.addPhotoButton);
+
+        photoNames = new ArrayList<>();
+
+        loadAlbum();
+
+        photoAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, photoNames);
+        photoListView.setAdapter(photoAdapter);
+
+        addPhotoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                selectPhoto();
+            }
+        });
+    }
+
+    private void loadAlbum() {
+        User owner = UserManager.getInstance().getUserByUsername("owner");
+        if (owner != null) {
+            currentAlbum = owner.getAlbumByName(albumName);
+            if (currentAlbum != null) {
+                for (Photo photo : currentAlbum.getPhotos()) {
+                    String fileUri = photo.getFileUri();
+                    String displayName = "Unknown Photo";
+                    if (fileUri != null && !fileUri.isEmpty()) {
+                        Uri uri = Uri.parse(fileUri);
+                        try {
+                            displayName = getDisplayNameFromUri(uri);
+                        } catch (SecurityException e) {
+                            String segment = uri.getLastPathSegment();
+                            displayName = (segment != null) ? segment : "Unknown Photo";
+                        }
+                    }
+                    photoNames.add(displayName);
+                }
+            }
+        }
+    }
+
+    private void selectPhoto() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("image/*");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        startActivityForResult(intent, REQUEST_CODE_PICK_IMAGE);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_CODE_PICK_IMAGE && resultCode == RESULT_OK && data != null) {
+            Uri selectedImageUri = data.getData();
+            if (selectedImageUri != null && currentAlbum != null) {
+                try {
+                    getContentResolver().takePersistableUriPermission(selectedImageUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                Photo newPhoto = new Photo(selectedImageUri);
+                currentAlbum.addPhoto(newPhoto);
+                UserManager.getInstance().saveUsers(this);
+
+                String displayName = getDisplayNameFromUri(selectedImageUri);
+                photoNames.add(displayName);
+                photoAdapter.notifyDataSetChanged();
+            } else {
+                Toast.makeText(this, "Error selecting photo", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private String getDisplayNameFromUri(Uri uri) {
+        String displayName = "Unknown";
+
+        ContentResolver contentResolver = getContentResolver();
+        Cursor cursor = contentResolver.query(uri, null, null, null, null);
+
+        try {
+            if (cursor != null && cursor.moveToFirst()) {
+                int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                if (nameIndex != -1) {
+                    displayName = cursor.getString(nameIndex);
+                }
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        return displayName;
+    }
+    private String getRealPathFromURI(Uri uri) {
+        String fileName = getDisplayNameFromUri(uri);
+        File file = new File(getCacheDir(), fileName);
+
+        try (InputStream inputStream = getContentResolver().openInputStream(uri);
+             OutputStream outputStream = new FileOutputStream(file)) {
+
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = inputStream.read(buf)) > 0) {
+                outputStream.write(buf, 0, len);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return file.getAbsolutePath();
+    }
+}

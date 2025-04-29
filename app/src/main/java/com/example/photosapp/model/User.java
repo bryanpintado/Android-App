@@ -33,4 +33,14 @@ public class User implements Serializable {
         }
         albums.add(album);
     }
+    public Album getAlbumByName(String name) {
+        if (albums != null) {
+            for (Album album : albums) {
+                if (album.getName().equalsIgnoreCase(name)) {
+                    return album;
+                }
+            }
+        }
+        return null;
+    }
 }
