@@ -11,6 +11,11 @@ import com.example.photosapp.PhotoAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
+import android.content.Intent;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import com.example.photosapp.model.Photo;
+import com.example.photosapp.model.UserManager;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -24,6 +29,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.List;
 
 public class AlbumActivity extends AppCompatActivity {
 
@@ -32,7 +38,7 @@ public class AlbumActivity extends AppCompatActivity {
     private ListView photoListView;
     private Button addPhotoButton;
     private PhotoAdapter photoAdapter;
-    private ArrayList<Photo> photoList;
+    private List<Photo> photoList;
 
     private Album currentAlbum;
     private String albumName;
@@ -57,6 +63,29 @@ public class AlbumActivity extends AppCompatActivity {
         // Initialize adapter before loading data
         photoAdapter = new PhotoAdapter(this, R.layout.list_item_photo, photoList);
         photoListView.setAdapter(photoAdapter);
+        // Open full-screen view on single tap
+        photoListView.setOnItemClickListener((parent, view, position, id) -> {
+            Photo clicked = photoList.get(position);
+            Intent i = new Intent(AlbumActivity.this, PhotoDisplayActivity.class);
+            i.putExtra("photo", clicked);
+            startActivity(i);
+        });
+        // Remove photo on long press
+        photoListView.setOnItemLongClickListener((parent, view, position, id) -> {
+            Photo toRemove = photoList.get(position);
+            new AlertDialog.Builder(AlbumActivity.this)
+                    .setTitle("Delete Photo")
+                    .setMessage("Remove this photo from the album?")
+                    .setPositiveButton("Delete", (dialog, which) -> {
+                        currentAlbum.removePhoto(toRemove);                    // update model
+                        UserManager.getInstance().saveUsers(AlbumActivity.this); // persist change
+                        photoList.remove(position);                            // update list
+                        photoAdapter.notifyDataSetChanged();                   // refresh UI
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+            return true;  // consume the long-click
+        });
 
         // Now load the album (safe to notify the adapter)
         loadAlbum();

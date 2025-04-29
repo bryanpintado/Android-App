@@ -8,6 +8,8 @@ import android.widget.ListView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
+import android.app.AlertDialog;
+import android.widget.EditText;
 
 import com.example.photosapp.model.Album;
 import com.example.photosapp.model.User;
@@ -39,6 +41,14 @@ public class HomeActivity extends AppCompatActivity {
         albumAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, albumNames);
         albumListView.setAdapter(albumAdapter);
 
+        // Open album on single tap
+        albumListView.setOnItemClickListener((parent, view, position, id) -> {
+            String selectedAlbum = albumNames.get(position);
+            Intent intent = new Intent(HomeActivity.this, AlbumActivity.class);
+            intent.putExtra("album_name", selectedAlbum);
+            startActivity(intent);
+        });
+
         addAlbumButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -46,17 +56,54 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
 
-        albumListView.setOnItemClickListener((parent, view, position, id) -> {
+        albumListView.setOnItemLongClickListener((parent, view, position, id) -> {
             String selectedAlbum = albumNames.get(position);
+            User owner = UserManager.getInstance().getUserByUsername("owner");
 
-            Intent intent = new Intent(HomeActivity.this, AlbumActivity.class);
-            intent.putExtra("album_name", selectedAlbum);
-            startActivity(intent);
+            new AlertDialog.Builder(HomeActivity.this)
+                    .setTitle(selectedAlbum)
+                    .setItems(new CharSequence[]{"Rename", "Delete"}, (dialog, which) -> {
+                        if (which == 0) {
+                            // RENAME
+                            EditText input = new EditText(HomeActivity.this);
+                            input.setText(selectedAlbum);
+                            new AlertDialog.Builder(HomeActivity.this)
+                                    .setTitle("Rename Album")
+                                    .setView(input)
+                                    .setPositiveButton("OK", (d, i) -> {
+                                        String newName = input.getText().toString().trim();
+                                        if (newName.isEmpty()) {
+                                            Toast.makeText(HomeActivity.this, "Name cannot be empty", Toast.LENGTH_SHORT).show();
+                                        } else if (owner.getAlbumByName(newName) != null) {
+                                            Toast.makeText(HomeActivity.this, "Album name already exists", Toast.LENGTH_SHORT).show();
+                                        } else {
+                                            owner.getAlbumByName(selectedAlbum).setName(newName);
+                                            UserManager.getInstance().saveUsers(HomeActivity.this);
+                                            loadAlbums();
+                                        }
+                                    })
+                                    .setNegativeButton("Cancel", null)
+                                    .show();
+                        } else {
+                            new AlertDialog.Builder(HomeActivity.this)
+                                    .setTitle("Delete Album")
+                                    .setMessage("Delete \"" + selectedAlbum + "\"?")
+                                    .setPositiveButton("Delete", (d, i) -> {
+                                        owner.removeAlbumByName(selectedAlbum);
+                                        UserManager.getInstance().saveUsers(HomeActivity.this);
+                                        loadAlbums();
+                                    })
+                                    .setNegativeButton("Cancel", null)
+                                    .show();
+                        }
+                    })
+                    .show();
+            return true;
         });
     }
 
     private void loadAlbums() {
-        albumNames.clear(); // Clear old list first
+        albumNames.clear();
 
         UserManager userManager = UserManager.getInstance();
         User owner = userManager.getUserByUsername("owner");
@@ -64,7 +111,7 @@ public class HomeActivity extends AppCompatActivity {
         if (owner == null) {
             owner = new User("owner");
             userManager.addUser(owner);
-            userManager.saveUsers(this); // <-- correct line
+            userManager.saveUsers(this); //
         }
 
         for (Album album : owner.getAlbums()) {
@@ -79,16 +126,16 @@ public class HomeActivity extends AppCompatActivity {
         int newAlbumNumber = albumNames.size() + 1;
         String newAlbumName = "Album " + newAlbumNumber;
 
-        // Add to list
         albumNames.add(newAlbumName);
         albumAdapter.notifyDataSetChanged();
 
-        // Save into user manager
         UserManager userManager = UserManager.getInstance();
         User owner = userManager.getUserByUsername("owner");
         if (owner != null) {
             owner.addAlbum(new Album(newAlbumName));
             userManager.saveUsers(this);
         }
+        loadAlbums();
     }
+
 }

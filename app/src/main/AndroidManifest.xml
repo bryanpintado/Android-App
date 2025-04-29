@@ -11,6 +11,7 @@
         android:theme="@style/Theme.PhotosApp">
 
         <activity android:name=".AlbumActivity" android:exported="true"/>
+        <activity android:name=".PhotoDisplayActivity" />
         <activity android:name=".HomeActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

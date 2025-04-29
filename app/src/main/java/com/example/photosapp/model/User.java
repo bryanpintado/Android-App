@@ -3,6 +3,7 @@ package com.example.photosapp.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Iterator;
 
 public class User implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -42,5 +43,16 @@ public class User implements Serializable {
             }
         }
         return null;
+    }
+    public boolean removeAlbumByName(String name) {
+        Iterator<Album> iter = albums.iterator();
+        while (iter.hasNext()) {
+            Album a = iter.next();
+            if (a.getName().equalsIgnoreCase(name)) {
+                iter.remove();
+                return true;
+            }
+        }
+        return false;
     }
 }
