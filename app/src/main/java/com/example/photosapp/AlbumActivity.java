@@ -66,8 +66,9 @@ public class AlbumActivity extends AppCompatActivity {
         // Open full-screen view on single tap
         photoListView.setOnItemClickListener((parent, view, position, id) -> {
             Photo clicked = photoList.get(position);
-            Intent i = new Intent(AlbumActivity.this, PhotoDisplayActivity.class);
-            i.putExtra("photo", clicked);
+            Intent i = new Intent(this, PhotoDisplayActivity.class);
+            i.putExtra("album_name", albumName);
+            i.putExtra("position", position);
             startActivity(i);
         });
         // Remove photo on long press
@@ -87,7 +88,6 @@ public class AlbumActivity extends AppCompatActivity {
             return true;  // consume the long-click
         });
 
-        // Now load the album (safe to notify the adapter)
         loadAlbum();
 
         addPhotoButton.setOnClickListener(new View.OnClickListener() {
