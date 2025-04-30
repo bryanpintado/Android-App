@@ -7,16 +7,16 @@ public class Tag implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private String name;
+    private String type;
     private String value;
 
     public Tag(String name, String value) {
-        this.name = name.trim().toLowerCase();
+        this.type = name.trim().toLowerCase();
         this.value = value.trim().toLowerCase();
     }
 
     public String getName() {
-        return name;
+        return type;
     }
 
     public String getValue() {
@@ -30,16 +30,21 @@ public class Tag implements Serializable {
         if (!(o instanceof Tag))
             return false;
         Tag other = (Tag) o;
-        return name.equals(other.name) && value.equals(other.value);
+        return type.equals(other.type) && value.equals(other.value);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, value);
+        return Objects.hash(type, value);
     }
 
     @Override
     public String toString() {
-        return name + "=" + value;
+        return type + "=" + value;
     }
+
+    public String getType() {
+        return type;
+    }
+
 }

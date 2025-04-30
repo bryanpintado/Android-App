@@ -1,21 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <ImageView
         android:id="@+id/fullImageView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@+id/buttonContainer"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:scaleType="fitCenter"
         android:contentDescription="@string/photo_description" />
+
+    <ListView
+        android:id="@+id/tagListView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:dividerHeight="4dp"
+        android:layout_marginTop="8dp" />
+
+    <Button
+        android:id="@+id/btnAddTag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Add Tag"
+        android:layout_gravity="center_horizontal"
+        android:layout_margin="8dp" />
 
     <LinearLayout
         android:id="@+id/buttonContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
         android:orientation="horizontal"
         android:padding="8dp">
 
@@ -37,4 +52,5 @@
             android:text="Next" />
 
     </LinearLayout>
-</RelativeLayout>
+
+</LinearLayout>

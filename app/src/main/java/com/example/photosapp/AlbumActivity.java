@@ -7,23 +7,15 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
 import android.view.View;
-import com.example.photosapp.PhotoAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
-import android.content.Intent;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import com.example.photosapp.model.Photo;
 import com.example.photosapp.model.UserManager;
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.example.photosapp.model.Album;
-import com.example.photosapp.model.Photo;
 import com.example.photosapp.model.User;
-import com.example.photosapp.model.UserManager;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
