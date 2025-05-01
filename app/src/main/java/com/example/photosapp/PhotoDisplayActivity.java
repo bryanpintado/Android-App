@@ -18,6 +18,11 @@ import android.widget.ListView;
 import android.widget.EditText;
 import android.app.AlertDialog;
 import android.widget.Toast;
+import android.widget.Button;
+import android.widget.Toast;
+import com.example.photosapp.model.Album;
+import com.example.photosapp.model.User;
+import com.example.photosapp.model.UserManager;
 
 import com.example.photosapp.model.Tag;
 
@@ -36,21 +41,27 @@ public class PhotoDisplayActivity extends AppCompatActivity {
     private List<String>       tagStrings;
     private Photo              currentPhoto;
 
+    private Button btnMovePhoto;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_photo_display);
 
+        // --- Wire up views ---
         fullImageView = findViewById(R.id.fullImageView);
         btnPrevious   = findViewById(R.id.btnPrevious);
         btnNext       = findViewById(R.id.btnNext);
         tagListView   = findViewById(R.id.tagListView);
         btnAddTag     = findViewById(R.id.btnAddTag);
+        btnMovePhoto  = findViewById(R.id.btnMovePhoto);
 
+        // --- Retrieve Intent extras ---
         Intent intent     = getIntent();
         String albumName  = intent.getStringExtra("album_name");
         position          = intent.getIntExtra("position", 0);
 
+        // --- Load photo list from model ---
         User owner = UserManager.getInstance().getUserByUsername("owner");
         if (owner != null) {
             Album album = owner.getAlbumByName(albumName);
@@ -59,6 +70,7 @@ public class PhotoDisplayActivity extends AppCompatActivity {
             photos = new ArrayList<>();
         }
 
+        // --- Initialize current photo and tag list ---
         currentPhoto = (photos.size() > position ? photos.get(position) : null);
         tagStrings   = new ArrayList<>();
         tagAdapter   = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, tagStrings);
@@ -68,20 +80,19 @@ public class PhotoDisplayActivity extends AppCompatActivity {
             for (Tag t : currentPhoto.getTags()) {
                 tagStrings.add(t.getType() + ": " + t.getValue());
             }
-        }
-        tagAdapter.notifyDataSetChanged();
-
-        if (currentPhoto != null) {
             Uri uri = Uri.parse(currentPhoto.getFileUri());
             fullImageView.setImageURI(uri);
         }
+        tagAdapter.notifyDataSetChanged();
 
+        // --- Slideshow: Previous button ---
         btnPrevious.setOnClickListener(v -> {
             if (position > 0) {
                 position--;
                 currentPhoto = photos.get(position);
                 fullImageView.setImageURI(Uri.parse(currentPhoto.getFileUri()));
-                // reload tags for new photo
+
+                // reload tags for this photo
                 tagStrings.clear();
                 for (Tag t : currentPhoto.getTags()) {
                     tagStrings.add(t.getType() + ": " + t.getValue());
@@ -90,12 +101,14 @@ public class PhotoDisplayActivity extends AppCompatActivity {
             }
         });
 
+        // --- Slideshow: Next button ---
         btnNext.setOnClickListener(v -> {
             if (position < photos.size() - 1) {
                 position++;
                 currentPhoto = photos.get(position);
                 fullImageView.setImageURI(Uri.parse(currentPhoto.getFileUri()));
-                // reload tags for new photo
+
+                // reload tags for this photo
                 tagStrings.clear();
                 for (Tag t : currentPhoto.getTags()) {
                     tagStrings.add(t.getType() + ": " + t.getValue());
@@ -104,6 +117,7 @@ public class PhotoDisplayActivity extends AppCompatActivity {
             }
         });
 
+        // --- Add Tag button ---
         btnAddTag.setOnClickListener(v -> {
             String[] types = {"person", "location"};
             new AlertDialog.Builder(this)
@@ -119,12 +133,12 @@ public class PhotoDisplayActivity extends AppCompatActivity {
                                     if (!val.isEmpty() && currentPhoto != null) {
                                         Tag newTag = new Tag(chosenType, val);
                                         if (currentPhoto.getTags().contains(newTag)) {
-                                            Toast.makeText(PhotoDisplayActivity.this,
+                                            Toast.makeText(this,
                                                     "Tag \"" + chosenType + ": " + val + "\" already exists",
                                                     Toast.LENGTH_SHORT).show();
                                         } else {
                                             currentPhoto.getTags().add(newTag);
-                                            UserManager.getInstance().saveUsers(PhotoDisplayActivity.this);
+                                            UserManager.getInstance().saveUsers(this);
                                             tagStrings.add(chosenType + ": " + val);
                                             tagAdapter.notifyDataSetChanged();
                                         }
@@ -136,6 +150,37 @@ public class PhotoDisplayActivity extends AppCompatActivity {
                     .show();
         });
 
+        // --- Move Photo button ---
+        btnMovePhoto.setOnClickListener(v -> {
+            List<Album> albums = owner.getAlbums();
+            String[] names = new String[albums.size()];
+            for (int i = 0; i < albums.size(); i++) {
+                names[i] = albums.get(i).getName();
+            }
+            new AlertDialog.Builder(this)
+                    .setTitle("Move photo to which album?")
+                    .setItems(names, (dialog, which) -> {
+                        String target = names[which];
+                        String currentAlbumName = albumName;
+                        if (target.equals(currentAlbumName)) {
+                            Toast.makeText(this, "Photo already in that album", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Album current = owner.getAlbumByName(currentAlbumName);
+                            Photo p = photos.get(position);
+                            current.removePhoto(p);
+                            owner.getAlbumByName(target).addPhoto(p);
+                            UserManager.getInstance().saveUsers(this);
+                            Toast.makeText(this, "Moved to " + target, Toast.LENGTH_SHORT).show();
+
+                            // Close the display so the album view can refresh
+                            setResult(RESULT_OK);
+                            finish();
+                        }
+                    })
+                    .show();
+        });
+
+        // --- Delete Tag on long-press ---
         tagListView.setOnItemLongClickListener((parent, view, pos, id) -> {
             new AlertDialog.Builder(this)
                     .setTitle("Delete tag")

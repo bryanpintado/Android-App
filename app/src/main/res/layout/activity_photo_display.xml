@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- Full-screen image view, fills available space above tags -->
     <ImageView
         android:id="@+id/fullImageView"
         android:layout_width="match_parent"
@@ -12,6 +13,7 @@
         android:scaleType="fitCenter"
         android:contentDescription="@string/photo_description" />
 
+    <!-- List of existing tags -->
     <ListView
         android:id="@+id/tagListView"
         android:layout_width="match_parent"
@@ -19,6 +21,7 @@
         android:dividerHeight="4dp"
         android:layout_marginTop="8dp" />
 
+    <!-- Button to add a new tag -->
     <Button
         android:id="@+id/btnAddTag"
         android:layout_width="wrap_content"
@@ -27,6 +30,16 @@
         android:layout_gravity="center_horizontal"
         android:layout_margin="8dp" />
 
+    <!-- Button to move photo to another album -->
+    <Button
+        android:id="@+id/btnMovePhoto"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Move Photo"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Slideshow controls at the bottom -->
     <LinearLayout
         android:id="@+id/buttonContainer"
         android:layout_width="match_parent"
@@ -34,17 +47,20 @@
         android:orientation="horizontal"
         android:padding="8dp">
 
+        <!-- Previous button on the left -->
         <Button
             android:id="@+id/btnPrevious"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Previous" />
 
+        <!-- Spacer pushes Next to the right -->
         <Space
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1" />
 
+        <!-- Next button on the right -->
         <Button
             android:id="@+id/btnNext"
             android:layout_width="wrap_content"

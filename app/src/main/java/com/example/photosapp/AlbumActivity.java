@@ -26,7 +26,7 @@ import java.util.List;
 public class AlbumActivity extends AppCompatActivity {
 
     private static final int REQUEST_CODE_PICK_IMAGE = 1;
-
+    private static final int REQUEST_DISPLAY_PHOTO = 100;
     private ListView photoListView;
     private Button addPhotoButton;
     private PhotoAdapter photoAdapter;
