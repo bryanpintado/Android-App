@@ -40,8 +40,7 @@ public class PhotoAdapter extends ArrayAdapter<Photo> {
             Uri uri = Uri.parse(photo.getFileUri());
             thumb.setImageURI(uri);
 
-            String fileName = uri.getLastPathSegment();
-            name.setText((fileName != null) ? fileName : "Photo");
+            name.setText(photo.getCaption());
         }
         return view;
     }

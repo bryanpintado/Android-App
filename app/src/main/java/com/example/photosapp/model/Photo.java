@@ -21,6 +21,12 @@ public class Photo implements Serializable {
 //        this.dateTime = LocalDateTime.now();
     }
 
+    public Photo(String fileUri, String caption) {
+        this.fileUri = fileUri;
+        this.caption = caption;
+        this.tags    = new ArrayList<>();
+    }
+
     public String getFileUri() {
         return fileUri;
     }

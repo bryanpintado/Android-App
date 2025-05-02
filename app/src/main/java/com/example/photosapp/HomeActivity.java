@@ -29,7 +29,6 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        // Initialize Views
         albumListView = findViewById(R.id.albumListView);
         addAlbumButton = findViewById(R.id.addAlbumButton);
 
@@ -41,7 +40,6 @@ public class HomeActivity extends AppCompatActivity {
         albumAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, albumNames);
         albumListView.setAdapter(albumAdapter);
 
-        // Open album on single tap
         albumListView.setOnItemClickListener((parent, view, position, id) -> {
             String selectedAlbum = albumNames.get(position);
             Intent intent = new Intent(HomeActivity.this, AlbumActivity.class);

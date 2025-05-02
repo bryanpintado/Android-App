@@ -77,7 +77,7 @@ public class AlbumActivity extends AppCompatActivity {
                     })
                     .setNegativeButton("Cancel", null)
                     .show();
-            return true;  // consume the long-click
+            return true;
         });
 
         loadAlbum();
@@ -87,6 +87,11 @@ public class AlbumActivity extends AppCompatActivity {
             public void onClick(View view) {
                 selectPhoto();
             }
+        });
+        Button btnSearch = findViewById(R.id.btnSearch);
+        btnSearch.setOnClickListener(v -> {
+            Intent searchIntent = new Intent(AlbumActivity.this, SearchActivity.class);
+            startActivity(searchIntent);
         });
     }
 
@@ -116,29 +121,34 @@ public class AlbumActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == REQUEST_DISPLAY_PHOTO && resultCode == RESULT_OK) {
-            // User moved a photo—reload the album from the model
             loadAlbum();
-            return;  // skip the rest (image‐pick logic)
+            return;
         }
-        if (requestCode == REQUEST_CODE_PICK_IMAGE && resultCode == RESULT_OK && data != null) {
+
+        if (requestCode == REQUEST_CODE_PICK_IMAGE
+                && resultCode == RESULT_OK
+                && data != null) {
+
             Uri selectedImageUri = data.getData();
             if (selectedImageUri != null && currentAlbum != null) {
                 try {
-                    getContentResolver().takePersistableUriPermission(selectedImageUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    getContentResolver()
+                            .takePersistableUriPermission(
+                                    selectedImageUri,
+                                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                            );
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
 
-                Photo newPhoto = new Photo(selectedImageUri);
+                String path    = getRealPathFromURI(selectedImageUri);
+                String caption = getDisplayNameFromUri(selectedImageUri);
+
+                Photo newPhoto = new Photo(path, caption);
                 currentAlbum.addPhoto(newPhoto);
                 UserManager.getInstance().saveUsers(this);
 
-                photoList.add(newPhoto);
-                // Reload photos from model so moved item is gone
                 photoList.clear();
-                currentAlbum = UserManager.getInstance()
-                        .getUserByUsername("owner")
-                        .getAlbumByName(albumName);
                 photoList.addAll(currentAlbum.getPhotos());
                 photoAdapter.notifyDataSetChanged();
             } else {
@@ -148,25 +158,18 @@ public class AlbumActivity extends AppCompatActivity {
     }
 
     private String getDisplayNameFromUri(Uri uri) {
-        String displayName = "Unknown";
-
-        ContentResolver contentResolver = getContentResolver();
-        Cursor cursor = contentResolver.query(uri, null, null, null, null);
-
-        try {
-            if (cursor != null && cursor.moveToFirst()) {
-                int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-                if (nameIndex != -1) {
-                    displayName = cursor.getString(nameIndex);
-                }
-            }
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
+        String name = "Unknown";
+        Cursor cursor = getContentResolver().query(
+                uri,
+                new String[]{OpenableColumns.DISPLAY_NAME},
+                null, null, null
+        );
+        if (cursor != null && cursor.moveToFirst()) {
+            int idx = cursor.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME);
+            name = cursor.getString(idx);
+            cursor.close();
         }
-
-        return displayName;
+        return name;
     }
     private String getRealPathFromURI(Uri uri) {
         String fileName = getDisplayNameFromUri(uri);

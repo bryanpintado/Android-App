@@ -18,11 +18,6 @@ import android.widget.ListView;
 import android.widget.EditText;
 import android.app.AlertDialog;
 import android.widget.Toast;
-import android.widget.Button;
-import android.widget.Toast;
-import com.example.photosapp.model.Album;
-import com.example.photosapp.model.User;
-import com.example.photosapp.model.UserManager;
 
 import com.example.photosapp.model.Tag;
 
@@ -48,7 +43,6 @@ public class PhotoDisplayActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_photo_display);
 
-        // --- Wire up views ---
         fullImageView = findViewById(R.id.fullImageView);
         btnPrevious   = findViewById(R.id.btnPrevious);
         btnNext       = findViewById(R.id.btnNext);
@@ -56,12 +50,10 @@ public class PhotoDisplayActivity extends AppCompatActivity {
         btnAddTag     = findViewById(R.id.btnAddTag);
         btnMovePhoto  = findViewById(R.id.btnMovePhoto);
 
-        // --- Retrieve Intent extras ---
         Intent intent     = getIntent();
         String albumName  = intent.getStringExtra("album_name");
         position          = intent.getIntExtra("position", 0);
 
-        // --- Load photo list from model ---
         User owner = UserManager.getInstance().getUserByUsername("owner");
         if (owner != null) {
             Album album = owner.getAlbumByName(albumName);
@@ -70,7 +62,6 @@ public class PhotoDisplayActivity extends AppCompatActivity {
             photos = new ArrayList<>();
         }
 
-        // --- Initialize current photo and tag list ---
         currentPhoto = (photos.size() > position ? photos.get(position) : null);
         tagStrings   = new ArrayList<>();
         tagAdapter   = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, tagStrings);
@@ -85,7 +76,6 @@ public class PhotoDisplayActivity extends AppCompatActivity {
         }
         tagAdapter.notifyDataSetChanged();
 
-        // --- Slideshow: Previous button ---
         btnPrevious.setOnClickListener(v -> {
             if (position > 0) {
                 position--;
@@ -101,7 +91,6 @@ public class PhotoDisplayActivity extends AppCompatActivity {
             }
         });
 
-        // --- Slideshow: Next button ---
         btnNext.setOnClickListener(v -> {
             if (position < photos.size() - 1) {
                 position++;
@@ -117,7 +106,6 @@ public class PhotoDisplayActivity extends AppCompatActivity {
             }
         });
 
-        // --- Add Tag button ---
         btnAddTag.setOnClickListener(v -> {
             String[] types = {"person", "location"};
             new AlertDialog.Builder(this)
@@ -150,7 +138,6 @@ public class PhotoDisplayActivity extends AppCompatActivity {
                     .show();
         });
 
-        // --- Move Photo button ---
         btnMovePhoto.setOnClickListener(v -> {
             List<Album> albums = owner.getAlbums();
             String[] names = new String[albums.size()];
@@ -174,7 +161,6 @@ public class PhotoDisplayActivity extends AppCompatActivity {
                             UserManager.getInstance().saveUsers(this);
                             Toast.makeText(this, "Moved to " + target, Toast.LENGTH_SHORT).show();
 
-                            // Close the display so the album view can refresh
                             setResult(RESULT_OK);
                             finish();
                         }
@@ -182,7 +168,6 @@ public class PhotoDisplayActivity extends AppCompatActivity {
                     .show();
         });
 
-        // --- Delete Tag on long-press ---
         tagListView.setOnItemLongClickListener((parent, view, pos, id) -> {
             new AlertDialog.Builder(this)
                     .setTitle("Delete tag")
