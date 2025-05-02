@@ -61,7 +61,7 @@ public class AlbumActivity extends AppCompatActivity {
             Intent i = new Intent(this, PhotoDisplayActivity.class);
             i.putExtra("album_name", albumName);
             i.putExtra("position", position);
-            startActivity(i);
+            startActivityForResult(i, REQUEST_DISPLAY_PHOTO);
         });
         // Remove photo on long press
         photoListView.setOnItemLongClickListener((parent, view, position, id) -> {
@@ -115,6 +115,11 @@ public class AlbumActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        if (requestCode == REQUEST_DISPLAY_PHOTO && resultCode == RESULT_OK) {
+            // User moved a photo—reload the album from the model
+            loadAlbum();
+            return;  // skip the rest (image‐pick logic)
+        }
         if (requestCode == REQUEST_CODE_PICK_IMAGE && resultCode == RESULT_OK && data != null) {
             Uri selectedImageUri = data.getData();
             if (selectedImageUri != null && currentAlbum != null) {
@@ -129,6 +134,12 @@ public class AlbumActivity extends AppCompatActivity {
                 UserManager.getInstance().saveUsers(this);
 
                 photoList.add(newPhoto);
+                // Reload photos from model so moved item is gone
+                photoList.clear();
+                currentAlbum = UserManager.getInstance()
+                        .getUserByUsername("owner")
+                        .getAlbumByName(albumName);
+                photoList.addAll(currentAlbum.getPhotos());
                 photoAdapter.notifyDataSetChanged();
             } else {
                 Toast.makeText(this, "Error selecting photo", Toast.LENGTH_SHORT).show();

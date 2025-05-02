@@ -164,6 +164,8 @@ public class PhotoDisplayActivity extends AppCompatActivity {
                         String currentAlbumName = albumName;
                         if (target.equals(currentAlbumName)) {
                             Toast.makeText(this, "Photo already in that album", Toast.LENGTH_SHORT).show();
+                            setResult(RESULT_OK);
+                            finish();
                         } else {
                             Album current = owner.getAlbumByName(currentAlbumName);
                             Photo p = photos.get(position);
